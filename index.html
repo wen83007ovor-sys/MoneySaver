@@ -148,7 +148,7 @@ border-radius: 12px; padding: 14px; margin-bottom: 16px;
 /* Stack all fields vertically on mobile */
 .add-row { display: flex; flex-direction: column; gap: 8px; }
 .add-row input, .add-row select {
-background-color: var(–surface); background: var(–surface); border: 1px solid var(–border);
+background: var(–surface); border: 1px solid var(–border);
 color: var(–text); border-radius: 8px; padding: 10px 12px;
 font-family: var(–font); font-size: 16px; /* 16px prevents iOS zoom */
 outline: none; width: 100%; display: block;
@@ -207,7 +207,7 @@ display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
 }
 .emoji-cell { font-size: 22px; cursor: pointer; flex-shrink: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
 .bill-name-inp {
-flex: 1; background-color: var(–surface); background: var(–surface); border: 1px solid var(–border);
+flex: 1; background: var(–surface); border: 1px solid var(–border);
 color: var(–text); border-radius: 6px; padding: 7px 10px;
 font-family: var(–font); font-size: 15px; outline: none; min-width: 0;
 -webkit-appearance: none; appearance: none;
@@ -226,7 +226,7 @@ gap: 6px; align-items: center;
 }
 .bill-card-bottom input[type=number],
 .bill-card-bottom select {
-background-color: var(–surface); background: var(–surface); border: 1px solid var(–border);
+background: var(–surface); border: 1px solid var(–border);
 color: var(–text); border-radius: 6px; padding: 7px 8px;
 font-family: var(–font); font-size: 15px; outline: none; width: 100%;
 -webkit-appearance: none; appearance: none;
@@ -253,7 +253,7 @@ border-radius: 12px; padding: 14px; margin-bottom: 14px;
 .income-edit-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
 .income-edit-row label { flex: 1; color: var(–muted); font-size: 13px; min-width: 0; }
 .income-edit-row input {
-background-color: var(–surface); background: var(–surface); border: 1px solid var(–border); color: var(–text);
+background: var(–surface); border: 1px solid var(–border); color: var(–text);
 border-radius: 6px; padding: 7px 10px; font-family: var(–font); font-size: 15px;
 outline: none; width: 110px; text-align: right; flex-shrink: 0;
 -webkit-appearance: none; appearance: none;
@@ -274,7 +274,7 @@ border-radius: 12px; padding: 14px;
 .bd-food-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
 .bd-food-row label { flex: 1; color: var(–muted); font-size: 13px; }
 .bd-food-row input {
-background-color: var(–surface); background: var(–surface); border: 1px solid var(–border); color: var(–text);
+background: var(–surface); border: 1px solid var(–border); color: var(–text);
 border-radius: 6px; padding: 7px 10px; font-family: var(–font); font-size: 15px;
 outline: none; width: 100px; text-align: right; flex-shrink: 0;
 -webkit-appearance: none; appearance: none;
@@ -435,6 +435,17 @@ max-width: 260px; box-shadow: 0 8px 24px rgba(0,0,0,.5);
 </main>
 
 <script>
+// ── Safe localStorage wrapper (private browsing / quota errors won't crash the app) ──
+let storageAvailable = true;
+function safeGet(key, fallback) {
+  try { const v = localStorage.getItem(key); return v === null ? fallback : v; }
+  catch (e) { storageAvailable = false; return fallback; }
+}
+function safeSet(key, value) {
+  try { localStorage.setItem(key, value); }
+  catch (e) { storageAvailable = false; }
+}
+
 // ── Data ──
 const CAT_COLORS = { food:'#6c8eff', transport:'#34d399', kids:'#a78bfa', health:'#fbbf24', misc:'#7b82a8' };
 const CAT_NAMES  = { food:'伙食', transport:'交通', kids:'小孩', health:'醫療', misc:'其他' };
@@ -464,15 +475,34 @@ const DEFAULT_BILLS = [
 const DEFAULT_SETTINGS = { salary:1000, subsidy:500, foodBudget:350, bills:DEFAULT_BILLS };
 
 let currentWeekOffset = 0;
-let entries  = JSON.parse(localStorage.getItem('budget_entries')  || '[]');
-let settings = JSON.parse(localStorage.getItem('budget_settings') || 'null')
-               || JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
-settings.bills.forEach((b,i) => { if (!b.id) b.id = 'b_'+Date.now()+i; });
+let entries  = [];
+let settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+let billIdCounter = 0;
+
+try {
+  entries = JSON.parse(safeGet('budget_entries', '[]'));
+  if (!Array.isArray(entries)) entries = [];
+} catch (e) { entries = []; }
+
+try {
+  const stored = JSON.parse(safeGet('budget_settings', 'null'));
+  if (stored && typeof stored === 'object' && Array.isArray(stored.bills)) {
+    settings = stored;
+  }
+} catch (e) { /* keep defaults */ }
+
+// Ensure every bill has a stable unique id
+settings.bills.forEach((b) => { if (!b.id) { billIdCounter++; b.id = 'b_'+Date.now()+'_'+billIdCounter; } });
 
 // ── Calc helpers ──
 function weeklyIncome()  { return settings.salary + settings.subsidy / 2; }
 function weeklyBills()   { return settings.bills.reduce((s,b) => { const f = FREQ_OPTIONS.find(o=>o.value===b.freq)||FREQ_OPTIONS[2]; return s + b.amt/f.divisor; }, 0); }
-function fmt(n)          { return '$' + (isNaN(n)?'0.00':Math.abs(n).toFixed(2)); }
+// fmt: formats a number as currency. Pass showSign=true to prefix negatives with "-" automatically.
+function fmt(n, showSign) {
+  if (isNaN(n)) n = 0;
+  if (showSign) return (n < 0 ? '-$' : '$') + Math.abs(n).toFixed(2);
+  return '$' + n.toFixed(2);
+}
 
 function getWeekDates(offset) {
   const now = new Date();
@@ -497,9 +527,9 @@ function saveSettings() {
   settings.salary     = parseFloat(document.getElementById('inc-salary').value)      || 0;
   settings.subsidy    = parseFloat(document.getElementById('inc-subsidy').value)     || 0;
   settings.foodBudget = parseFloat(document.getElementById('food-budget-inp').value) || 0;
-  localStorage.setItem('budget_settings', JSON.stringify(settings));
+  safeSet('budget_settings', JSON.stringify(settings));
 }
-function saveEntries() { localStorage.setItem('budget_entries', JSON.stringify(entries)); }
+function saveEntries() { safeSet('budget_entries', JSON.stringify(entries)); }
 
 // ── Render: week label ──
 function renderWeekLabel() {
@@ -589,9 +619,9 @@ function renderBillsTab() {
 
   document.getElementById('total-income-display').textContent = fmt(income);
   document.getElementById('bd-income').textContent     = fmt(income);
-  document.getElementById('bd-fixed').textContent      = '-'+fmt(fixed);
+  document.getElementById('bd-fixed').textContent      = fmt(-fixed, true);
   document.getElementById('bd-disposable').textContent = fmt(disp);
-  document.getElementById('bd-savings').textContent    = (savings<0?'-':'')+fmt(savings);
+  document.getElementById('bd-savings').textContent    = fmt(savings, true);
   document.getElementById('bd-savings').className      = savings>=0?'c-green':'c-red';
   document.getElementById('bd-monthly-savings').textContent = '≈ '+fmt(Math.max(0,savings)*4.33);
 
@@ -626,17 +656,17 @@ function updateBill(id, field, value) {
   const wc = document.getElementById('wc-'+id);
   if (wc) wc.textContent = fmt(b.amt/f.divisor)+'/週';
   const income=weeklyIncome(), fixed=weeklyBills(), disp=income-fixed, savings=disp-settings.foodBudget;
-  document.getElementById('bd-fixed').textContent      = '-'+fmt(fixed);
+  document.getElementById('bd-fixed').textContent      = fmt(-fixed, true);
   document.getElementById('bd-disposable').textContent = fmt(disp);
-  document.getElementById('bd-savings').textContent    = (savings<0?'-':'')+fmt(savings);
+  document.getElementById('bd-savings').textContent    = fmt(savings, true);
   document.getElementById('bd-savings').className      = savings>=0?'c-green':'c-red';
   document.getElementById('bd-monthly-savings').textContent = '≈ '+fmt(Math.max(0,savings)*4.33);
-  localStorage.setItem('budget_settings', JSON.stringify(settings));
+  safeSet('budget_settings', JSON.stringify(settings));
 }
 
 function addBill() {
   settings.bills.push({ id:'b_'+Date.now(), emoji:'📦', name:'', amt:0, freq:'monthly' });
-  localStorage.setItem('budget_settings', JSON.stringify(settings));
+  safeSet('budget_settings', JSON.stringify(settings));
   renderBillsTab();
   const rows = document.querySelectorAll('.bill-name-inp');
   if (rows.length) rows[rows.length-1].focus();
@@ -645,7 +675,7 @@ function addBill() {
 function deleteBill(id) {
   if (!confirm('確認刪除此固定支出項目？')) return;
   settings.bills = settings.bills.filter(b=>b.id!==id);
-  localStorage.setItem('budget_settings', JSON.stringify(settings));
+  safeSet('budget_settings', JSON.stringify(settings));
   renderBillsTab();
 }
 
@@ -655,14 +685,22 @@ function pickEmoji(billId, spanEl) {
   const picker = document.createElement('div');
   picker.className = 'emoji-options';
   const rect = spanEl.getBoundingClientRect();
-  picker.style.top  = (rect.bottom + window.scrollY + 6)+'px';
-  picker.style.left = Math.min(rect.left, window.innerWidth-270)+'px';
+  // position:fixed is relative to the viewport, so do NOT add window.scrollY/scrollX
+  let top  = rect.bottom + 6;
+  let left = rect.left;
+  // Keep picker on-screen (clamp to viewport)
+  const pickerWidth = 260, pickerHeight = 160;
+  if (left + pickerWidth > window.innerWidth)  left = window.innerWidth - pickerWidth - 8;
+  if (left < 8) left = 8;
+  if (top + pickerHeight > window.innerHeight) top = rect.top - pickerHeight - 6;
+  picker.style.top  = top + 'px';
+  picker.style.left = left + 'px';
   EMOJI_LIST.forEach(em => {
     const s = document.createElement('span'); s.textContent = em;
     s.onclick = e => {
       e.stopPropagation();
       const b = settings.bills.find(x=>x.id===billId);
-      if (b) { b.emoji=em; localStorage.setItem('budget_settings',JSON.stringify(settings)); renderBillsTab(); }
+      if (b) { b.emoji=em; safeSet('budget_settings',JSON.stringify(settings)); renderBillsTab(); }
       picker.remove();
     };
     picker.appendChild(s);
@@ -708,11 +746,23 @@ function renderAll() {
 
 // ── Init ──
 window.onload = () => {
-  document.getElementById('inp-date').value        = fmtDateInp(new Date());
+  const today = new Date();
+  const dateInp = document.getElementById('inp-date');
+  dateInp.value = fmtDateInp(today);
+  // Reasonable bounds: 2 years back to 1 year ahead, to avoid wildly wrong week calculations
+  const minD = new Date(today); minD.setFullYear(minD.getFullYear() - 2);
+  const maxD = new Date(today); maxD.setFullYear(maxD.getFullYear() + 1);
+  dateInp.min = fmtDateInp(minD);
+  dateInp.max = fmtDateInp(maxD);
+
   document.getElementById('inc-salary').value      = settings.salary;
   document.getElementById('inc-subsidy').value     = settings.subsidy;
   document.getElementById('food-budget-inp').value = settings.foodBudget;
   renderBillsTab(); renderAll();
+
+  if (!storageAvailable) {
+    console.warn('localStorage 無法使用（可能為私密瀏覽模式），資料將不會被保存。');
+  }
 };
 </script>
 
