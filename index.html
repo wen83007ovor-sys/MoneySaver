@@ -1,40 +1,61 @@
 <!DOCTYPE html>
 
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="dark light">
 <title>省錢計劃 · 記帳本</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    color-scheme: dark;
-    --bg:      #0f1117;
-    --surface: #1a1d27;
-    --card:    #22263a;
-    --border:  #2e3350;
-    --accent:  #6c8eff;
-    --accent2: #a78bfa;
-    --green:   #34d399;
-    --red:     #f87171;
-    --yellow:  #fbbf24;
-    --text:    #e8eaf6;
-    --muted:   #7b82a8;
-    --font:    'Noto Sans TC', sans-serif;
+    --font: 'Noto Sans TC', sans-serif;
   }
+
+/* ── Dark theme (default) ── */
+html[data-theme=“dark”] {
+color-scheme: dark;
+–bg:      #0f1117;
+–surface: #1a1d27;
+–card:    #22263a;
+–border:  #2e3350;
+–accent:  #6c8eff;
+–accent2: #a78bfa;
+–green:   #34d399;
+–red:     #f87171;
+–yellow:  #fbbf24;
+–text:    #e8eaf6;
+–muted:   #7b82a8;
+–shadow:  rgba(0,0,0,.5);
+}
+
+/* ── Light theme ── */
+html[data-theme=“light”] {
+color-scheme: light;
+–bg:      #f4f5fb;
+–surface: #ffffff;
+–card:    #ffffff;
+–border:  #dde1f0;
+–accent:  #5b7cfa;
+–accent2: #8b6cf0;
+–green:   #1ea672;
+–red:     #e0463f;
+–yellow:  #b8860b;
+–text:    #1e2236;
+–muted:   #6b7290;
+–shadow:  rgba(30,34,54,.12);
+}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { -webkit-text-size-adjust: 100%; }
 
-/* Force all inputs/selects to use dark theme — prevents Android Chrome override */
+/* Force all inputs/selects to follow theme colors — prevents Android Chrome override */
 input, select, textarea {
 background-color: var(–surface) !important;
 color: var(–text) !important;
 }
-/* Style dropdown option list (Android Chrome renders <option> with UA colors otherwise) */
 select option {
 background-color: var(–surface);
 color: var(–text);
@@ -47,13 +68,14 @@ font-family: var(–font);
 font-size: 15px;
 min-height: 100vh;
 overflow-x: hidden;
+transition: background-color .25s, color .25s;
 }
 
 /* ── Header ── */
 header {
-background: linear-gradient(135deg,#1a1d27 0%,#12152a 100%);
+background: linear-gradient(135deg, var(–surface) 0%, var(–bg) 100%);
 border-bottom: 1px solid var(–border);
-padding: 14px 16px;
+padding: 12px 16px;
 position: sticky; top: 0; z-index: 100;
 width: 100%;
 }
@@ -61,20 +83,34 @@ width: 100%;
 display: flex; align-items: center; justify-content: space-between;
 max-width: 720px; margin: 0 auto; gap: 8px;
 }
-.logo { font-size: 18px; font-weight: 700; flex-shrink: 0; }
+.header-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex-shrink: 1; }
+.logo { font-size: 17px; font-weight: 700; flex-shrink: 0; white-space: nowrap; }
 .logo span { color: var(–accent); }
-.week-nav { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+.icon-btn {
+background: var(–card); border: 1px solid var(–border);
+color: var(–text); border-radius: 8px; padding: 6px 9px;
+cursor: pointer; font-size: 14px; flex-shrink: 0;
+-webkit-tap-highlight-color: transparent;
+display: flex; align-items: center; gap: 4px;
+}
+.icon-btn:active { border-color: var(–accent); }
+
+.week-nav { display: flex; align-items: center; gap: 4px; min-width: 0; width: 100%; }
 .week-nav button {
 background: var(–card); border: 1px solid var(–border);
-color: var(–text); border-radius: 6px; padding: 5px 10px;
+color: var(–text); border-radius: 6px; padding: 5px 9px;
 cursor: pointer; font-size: 14px; flex-shrink: 0;
 -webkit-tap-highlight-color: transparent;
 }
 #week-label {
-font-size: 12px; font-weight: 500; text-align: center;
+font-size: 11px; font-weight: 500; text-align: center;
 white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 min-width: 0; flex: 1;
 }
+
+.header-bottom-row { margin-top: 10px; max-width: 720px; margin-left: auto; margin-right: auto; }
 
 /* ── Layout ── */
 main { max-width: 720px; margin: 0 auto; padding: 16px 12px 80px; }
@@ -88,6 +124,7 @@ gap: 8px; margin-bottom: 16px;
 background: var(–card); border: 1px solid var(–border);
 border-radius: 12px; padding: 12px 10px;
 display: flex; flex-direction: column; gap: 4px; min-width: 0;
+box-shadow: 0 1px 3px var(–shadow);
 }
 .s-label { font-size: 10px; color: var(–muted); text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .s-value { font-size: 18px; font-weight: 700; word-break: break-all; }
@@ -101,6 +138,7 @@ display: flex; flex-direction: column; gap: 4px; min-width: 0;
 .budget-bar-wrap {
 background: var(–card); border: 1px solid var(–border);
 border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+box-shadow: 0 1px 3px var(–shadow);
 }
 .bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(–muted); margin-bottom: 8px; }
 .bar-track { height: 10px; background: var(–border); border-radius: 99px; overflow: hidden; }
@@ -142,20 +180,24 @@ text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px;
 .add-box {
 background: var(–card); border: 1px solid var(–border);
 border-radius: 12px; padding: 14px; margin-bottom: 16px;
+box-shadow: 0 1px 3px var(–shadow);
 }
 .add-title { font-size: 12px; font-weight: 600; color: var(–muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
 
-/* Stack all fields vertically on mobile */
 .add-row { display: flex; flex-direction: column; gap: 8px; }
 .add-row input, .add-row select {
 background: var(–surface); border: 1px solid var(–border);
 color: var(–text); border-radius: 8px; padding: 10px 12px;
-font-family: var(–font); font-size: 16px; /* 16px prevents iOS zoom */
+font-family: var(–font); font-size: 16px;
 outline: none; width: 100%; display: block;
 -webkit-appearance: none; appearance: none;
 }
-.add-row select { background-color: var(–surface); background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%237b82a8’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+.add-row select {
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%237b82a8’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
+background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+}
 .add-row input:focus, .add-row select:focus { border-color: var(–accent); }
+.date-hint { font-size: 11px; color: var(–muted); margin-top: -2px; }
 .btn-add {
 background: var(–accent); color: #fff; border: none;
 border-radius: 8px; padding: 11px; cursor: pointer;
@@ -170,7 +212,7 @@ background: var(–card); border: 1px solid var(–border);
 border-radius: 10px; padding: 10px 12px;
 display: flex; align-items: center; gap: 8px; min-width: 0;
 }
-.e-date { font-size: 11px; color: var(–muted); width: 40px; flex-shrink: 0; }
+.e-date { font-size: 11px; color: var(–muted); width: 46px; flex-shrink: 0; }
 .e-cat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .e-desc { flex: 1; font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .e-cat-badge { font-size: 10px; background: var(–surface); border-radius: 4px; padding: 2px 5px; color: var(–muted); white-space: nowrap; flex-shrink: 0; }
@@ -197,14 +239,11 @@ margin-bottom: 12px; gap: 8px;
 }
 .bills-section-title { font-size: 12px; font-weight: 700; color: var(–accent); text-transform: uppercase; letter-spacing: .6px; }
 
-/* Bill card — stacked on mobile */
 .bill-card {
 background: var(–card); border: 1px solid var(–border);
 border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
 }
-.bill-card-top {
-display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-}
+.bill-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .emoji-cell { font-size: 22px; cursor: pointer; flex-shrink: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
 .bill-name-inp {
 flex: 1; background: var(–surface); border: 1px solid var(–border);
@@ -220,10 +259,7 @@ cursor: pointer; font-size: 20px; padding: 4px; flex-shrink: 0;
 }
 .bill-del-btn:active { color: var(–red); }
 
-.bill-card-bottom {
-display: grid; grid-template-columns: 1fr 1fr auto;
-gap: 6px; align-items: center;
-}
+.bill-card-bottom { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; align-items: center; }
 .bill-card-bottom input[type=number],
 .bill-card-bottom select {
 background: var(–surface); border: 1px solid var(–border);
@@ -231,7 +267,7 @@ color: var(–text); border-radius: 6px; padding: 7px 8px;
 font-family: var(–font); font-size: 15px; outline: none; width: 100%;
 -webkit-appearance: none; appearance: none;
 }
-.bill-card-bottom select { background-color: var(–surface);
+.bill-card-bottom select {
 background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%237b82a8’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
 background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px;
 }
@@ -249,6 +285,7 @@ width: 100%; margin-top: 4px; -webkit-tap-highlight-color: transparent;
 .income-summary {
 background: var(–card); border: 1px solid var(–border);
 border-radius: 12px; padding: 14px; margin-bottom: 14px;
+box-shadow: 0 1px 3px var(–shadow);
 }
 .income-edit-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
 .income-edit-row label { flex: 1; color: var(–muted); font-size: 13px; min-width: 0; }
@@ -268,6 +305,7 @@ font-weight: 700; font-size: 14px;
 .budget-breakdown {
 background: var(–card); border: 1px solid var(–border);
 border-radius: 12px; padding: 14px;
+box-shadow: 0 1px 3px var(–shadow);
 }
 .bd-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 5px 0; gap: 8px; }
 .bd-row span:first-child { color: var(–muted); }
@@ -288,10 +326,15 @@ outline: none; width: 100px; text-align: right; flex-shrink: 0;
 display: flex; flex-wrap: wrap; gap: 6px; padding: 10px;
 background: var(–card); border: 1px solid var(–border);
 border-radius: 10px; position: fixed; z-index: 300;
-max-width: 260px; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+max-width: 260px; box-shadow: 0 8px 24px var(–shadow);
 }
 .emoji-options span { font-size: 22px; cursor: pointer; padding: 4px; border-radius: 6px; -webkit-tap-highlight-color: transparent; }
 .emoji-options span:active { background: var(–border); }
+
+/* ── Settings row (lang + theme) ── */
+.settings-bar {
+display: flex; gap: 8px; justify-content: flex-end;
+}
 </style>
 
 </head>
@@ -299,7 +342,15 @@ max-width: 260px; box-shadow: 0 8px 24px rgba(0,0,0,.5);
 
 <header>
   <div class="header-row">
-    <div class="logo">省<span>錢</span>計劃</div>
+    <div class="header-left">
+      <div class="logo" id="logo-text">省<span>錢</span>計劃</div>
+    </div>
+    <div class="header-right">
+      <button class="icon-btn" id="lang-toggle" onclick="toggleLang()" title="Switch language">🌐 <span id="lang-label">EN</span></button>
+      <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" title="Switch theme">🌙</button>
+    </div>
+  </div>
+  <div class="header-bottom-row">
     <div class="week-nav">
       <button onclick="changeWeek(-1)">‹</button>
       <span id="week-label"></span>
@@ -314,70 +365,71 @@ max-width: 260px; box-shadow: 0 8px 24px rgba(0,0,0,.5);
 
   <div class="summary-grid">
     <div class="s-card">
-      <div class="s-label">伙食週預算</div>
+      <div class="s-label" data-i18n="foodBudgetLabel">伙食週預算</div>
       <div class="s-value c-accent" id="sum-budget">$350</div>
-      <div class="s-sub">每週可用</div>
+      <div class="s-sub" data-i18n="perWeekAvailable">每週可用</div>
     </div>
     <div class="s-card">
-      <div class="s-label">本週已花</div>
+      <div class="s-label" data-i18n="spentThisWeek">本週已花</div>
       <div class="s-value c-yellow" id="sum-spent">$0</div>
-      <div class="s-sub">伙食合計</div>
+      <div class="s-sub" data-i18n="foodTotal">伙食合計</div>
     </div>
     <div class="s-card">
-      <div class="s-label">剩餘/超支</div>
+      <div class="s-label" data-i18n="remainOver">剩餘/超支</div>
       <div class="s-value c-green" id="sum-remain">$350</div>
-      <div class="s-sub" id="sum-remain-sub">還可以花</div>
+      <div class="s-sub" id="sum-remain-sub" data-i18n="stillAvailable">還可以花</div>
     </div>
   </div>
 
   <!-- Progress -->
 
   <div class="budget-bar-wrap">
-    <div class="bar-label"><span>伙食預算使用率</span><span id="bar-pct">0%</span></div>
+    <div class="bar-label"><span data-i18n="budgetUsage">伙食預算使用率</span><span id="bar-pct">0%</span></div>
     <div class="bar-track"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
   </div>
 
   <!-- Alert -->
 
-  <div class="alert-bar" id="alert-bar">⚠️ 本週伙食已超支！請留意飲食支出。</div>
+  <div class="alert-bar" id="alert-bar" data-i18n="overspendAlert">⚠️ 本週伙食已超支！請留意飲食支出。</div>
 
   <!-- Tabs -->
 
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('week')">本週記帳</button>
-    <button class="tab" onclick="switchTab('month')">月度總覽</button>
-    <button class="tab" onclick="switchTab('bills')">固定支出設定</button>
+    <button class="tab active" onclick="switchTab('week')" data-i18n="tabWeek">本週記帳</button>
+    <button class="tab" onclick="switchTab('month')" data-i18n="tabMonth">月度總覽</button>
+    <button class="tab" onclick="switchTab('bills')" data-i18n="tabBills">固定支出設定</button>
   </div>
 
   <!-- ═══ TAB: Week ═══ -->
 
   <div id="tab-week">
     <div class="add-box">
-      <div class="add-title">新增支出</div>
+      <div class="add-title" data-i18n="addExpense">新增支出</div>
       <div class="add-row">
-        <input id="inp-desc" type="text" placeholder="說明（如：超市買菜）" />
-        <input id="inp-amt" type="number" step="0.01" placeholder="金額 $" inputmode="decimal" />
+        <input id="inp-desc" type="text" data-i18n-placeholder="descPlaceholder" placeholder="說明（如：超市買菜）" />
+        <input id="inp-amt" type="number" step="0.01" data-i18n-placeholder="amtPlaceholder" placeholder="金額 $" inputmode="decimal" />
         <input id="inp-date" type="date" />
+        <div class="date-hint" id="date-hint">格式：DD/MM/YYYY（澳洲格式）</div>
         <select id="inp-cat">
-          <option value="food">🛒 伙食</option>
-          <option value="transport">🚗 交通</option>
-          <option value="kids">🧸 小孩</option>
-          <option value="health">💊 醫療</option>
-          <option value="misc">📦 其他</option>
+          <option value="food" data-i18n="catFood">🛒 伙食</option>
+          <option value="transport" data-i18n="catTransport">🚗 交通</option>
+          <option value="kids" data-i18n="catKids">🧸 小孩</option>
+          <option value="health" data-i18n="catHealth">💊 醫療</option>
+          <option value="misc" data-i18n="catMisc">📦 其他</option>
         </select>
-        <button class="btn-add" onclick="addEntry()">＋ 記帳</button>
+        <button class="btn-add" onclick="addEntry()" data-i18n="addEntryBtn">＋ 記帳</button>
       </div>
     </div>
-    <div class="section-title">本週明細</div>
+    <div class="section-title" data-i18n="weekDetail">本週明細</div>
     <div class="entry-list" id="entry-list">
-      <div class="empty-state">本週還沒有記帳記錄 🌟</div>
+      <div class="empty-state" data-i18n="noEntries">本週還沒有記帳記錄 🌟</div>
     </div>
   </div>
 
   <!-- ═══ TAB: Month ═══ -->
 
   <div id="tab-month" style="display:none">
-    <div class="section-title">月度週別總覽</div>
+    <div class="section-title" data-i18n="monthlyOverview">月度週別總覽</div>
     <div id="month-list"></div>
   </div>
 
@@ -387,46 +439,46 @@ max-width: 260px; box-shadow: 0 8px 24px rgba(0,0,0,.5);
 
 ```
 <div class="income-summary">
-  <div class="section-title" style="margin-bottom:10px">💰 每週收入</div>
+  <div class="section-title" style="margin-bottom:10px" data-i18n="weeklyIncome">💰 每週收入</div>
   <div class="income-edit-row">
-    <label>💼 每週薪資</label>
+    <label data-i18n="salaryLabel">💼 每週薪資</label>
     <input type="number" id="inc-salary" inputmode="decimal" step="1" oninput="saveSettings();renderBillsTab()" />
   </div>
   <div class="income-edit-row">
-    <label>🏛️ 政府補助（每兩週）</label>
+    <label data-i18n="subsidyLabel">🏛️ 政府補助（每兩週）</label>
     <input type="number" id="inc-subsidy" inputmode="decimal" step="1" oninput="saveSettings();renderBillsTab()" />
   </div>
   <div class="income-total-row">
-    <span style="color:var(--muted)">週收入合計</span>
+    <span style="color:var(--muted)" data-i18n="weeklyIncomeTotal">週收入合計</span>
     <span class="c-green" id="total-income-display">$1,250.00</span>
   </div>
 </div>
 
 <div class="bills-section">
   <div class="bills-section-header">
-    <div class="bills-section-title">🏷️ 固定支出項目</div>
-    <span style="font-size:11px;color:var(--muted)">點擊可編輯</span>
+    <div class="bills-section-title" data-i18n="fixedExpenseItems">🏷️ 固定支出項目</div>
+    <span style="font-size:11px;color:var(--muted)" data-i18n="tapToEdit">點擊可編輯</span>
   </div>
   <div id="bills-list"></div>
-  <button class="btn-add-bill" onclick="addBill()">＋ 新增固定支出</button>
+  <button class="btn-add-bill" onclick="addBill()" data-i18n="addBillBtn">＋ 新增固定支出</button>
 </div>
 
 <div class="budget-breakdown">
-  <div class="section-title" style="margin-bottom:10px">📊 預算試算</div>
-  <div class="bd-row"><span>週收入</span><span class="c-green" id="bd-income">$1,250.00</span></div>
-  <div class="bd-row"><span>固定支出（週均）</span><span class="c-red" id="bd-fixed">-$755.98</span></div>
+  <div class="section-title" style="margin-bottom:10px" data-i18n="budgetCalc">📊 預算試算</div>
+  <div class="bd-row"><span data-i18n="weeklyIncomeRow">週收入</span><span class="c-green" id="bd-income">$1,250.00</span></div>
+  <div class="bd-row"><span data-i18n="fixedExpenseWeekly">固定支出（週均）</span><span class="c-red" id="bd-fixed">-$755.98</span></div>
   <hr class="bd-divider">
-  <div class="bd-row highlight"><span>可支配餘額</span><span class="c-accent" id="bd-disposable">$494.02</span></div>
+  <div class="bd-row highlight"><span data-i18n="disposableBalance">可支配餘額</span><span class="c-accent" id="bd-disposable">$494.02</span></div>
   <hr class="bd-divider">
   <div class="bd-food-row">
-    <label>🛒 伙食預算（每週）</label>
+    <label data-i18n="foodBudgetWeekly">🛒 伙食預算（每週）</label>
     <input type="number" id="food-budget-inp" inputmode="decimal" step="1" oninput="saveSettings();renderAll()" />
   </div>
   <div class="bd-row highlight" style="margin-top:6px">
-    <span>🐷 建議每週存款</span>
+    <span data-i18n="suggestedSavings">🐷 建議每週存款</span>
     <span class="c-green" id="bd-savings">$144.02</span>
   </div>
-  <div class="bd-row"><span>💰 月存款目標（×4.3）</span><span class="c-green" id="bd-monthly-savings">≈ $619</span></div>
+  <div class="bd-row"><span data-i18n="monthlySavingsGoal">💰 月存款目標（×4.3）</span><span class="c-green" id="bd-monthly-savings">≈ $619</span></div>
 </div>
 ```
 
@@ -435,7 +487,83 @@ max-width: 260px; box-shadow: 0 8px 24px rgba(0,0,0,.5);
 </main>
 
 <script>
-// ── Safe localStorage wrapper (private browsing / quota errors won't crash the app) ──
+// ═══════════════════════════════════════
+//  I18N — Translation dictionary
+// ═══════════════════════════════════════
+const I18N = {
+  'zh-Hant': {
+    foodBudgetLabel: '伙食週預算', perWeekAvailable: '每週可用',
+    spentThisWeek: '本週已花', foodTotal: '伙食合計',
+    remainOver: '剩餘/超支', stillAvailable: '還可以花', overspentLabel: '⚠️ 已超支',
+    budgetUsage: '伙食預算使用率',
+    overspendAlert: '⚠️ 本週伙食已超支！請留意飲食支出。',
+    tabWeek: '本週記帳', tabMonth: '月度總覽', tabBills: '固定支出設定',
+    addExpense: '新增支出',
+    descPlaceholder: '說明（如：超市買菜）', amtPlaceholder: '金額 $',
+    dateHint: '格式：DD/MM/YYYY（澳洲格式）',
+    catFood: '🛒 伙食', catTransport: '🚗 交通', catKids: '🧸 小孩', catHealth: '💊 醫療', catMisc: '📦 其他',
+    addEntryBtn: '＋ 記帳',
+    weekDetail: '本週明細', noEntries: '本週還沒有記帳記錄 🌟',
+    monthlyOverview: '月度週別總覽',
+    weeklyIncome: '💰 每週收入', salaryLabel: '💼 每週薪資', subsidyLabel: '🏛️ 政府補助（每兩週）',
+    weeklyIncomeTotal: '週收入合計',
+    fixedExpenseItems: '🏷️ 固定支出項目', tapToEdit: '點擊可編輯', addBillBtn: '＋ 新增固定支出',
+    budgetCalc: '📊 預算試算', weeklyIncomeRow: '週收入', fixedExpenseWeekly: '固定支出（週均）',
+    disposableBalance: '可支配餘額', foodBudgetWeekly: '🛒 伙食預算（每週）',
+    suggestedSavings: '🐷 建議每週存款', monthlySavingsGoal: '💰 月存款目標（×4.3）',
+    perWeek: '/週', confirmDeleteBill: '確認刪除此固定支出項目？', confirmDeleteEntry: '確認刪除此筆記錄？',
+    fillAmtDate: '請填寫金額與日期', billNamePlaceholder: '支出名稱', amtOnlyPlaceholder: '金額',
+    noDescription: '（無說明）', noData: '暫無資料',
+    thisWeek: '本週', weeksAgo: '週前', weeksLater: '週後',
+    allExpense: '全部支出', foodColon: '伙食', overspendShort: '超支', remainShort: '剩',
+    freqWeekly: '每週', freqFortnightly: '每兩週', freqMonthly: '每月',
+    freqBimonthly: '每兩個月', freqQuarterly: '每季', freqYearly: '每年',
+    langLabel: 'EN', themeLight: '☀️', themeDark: '🌙',
+    logoText1: '省', logoText2: '錢', logoText3: '計劃',
+  },
+  'en': {
+    foodBudgetLabel: 'Food Budget', perWeekAvailable: 'per week',
+    spentThisWeek: 'Spent This Week', foodTotal: 'food total',
+    remainOver: 'Remain/Over', stillAvailable: 'still available', overspentLabel: '⚠️ Overspent',
+    budgetUsage: 'Food Budget Usage',
+    overspendAlert: "⚠️ You've overspent your food budget this week!",
+    tabWeek: 'This Week', tabMonth: 'Monthly Overview', tabBills: 'Fixed Expenses',
+    addExpense: 'Add Expense',
+    descPlaceholder: 'Description (e.g. Groceries)', amtPlaceholder: 'Amount $',
+    dateHint: 'Format: DD/MM/YYYY (Australian)',
+    catFood: '🛒 Food', catTransport: '🚗 Transport', catKids: '🧸 Kids', catHealth: '💊 Health', catMisc: '📦 Other',
+    addEntryBtn: '＋ Add',
+    weekDetail: 'This Week\'s Details', noEntries: 'No entries yet this week 🌟',
+    monthlyOverview: 'Weekly Overview (Last 5 Weeks)',
+    weeklyIncome: '💰 Weekly Income', salaryLabel: '💼 Weekly Salary', subsidyLabel: '🏛️ Govt Subsidy (fortnightly)',
+    weeklyIncomeTotal: 'Total Weekly Income',
+    fixedExpenseItems: '🏷️ Fixed Expense Items', tapToEdit: 'Tap to edit', addBillBtn: '＋ Add Fixed Expense',
+    budgetCalc: '📊 Budget Breakdown', weeklyIncomeRow: 'Weekly Income', fixedExpenseWeekly: 'Fixed Expenses (weekly avg)',
+    disposableBalance: 'Disposable Balance', foodBudgetWeekly: '🛒 Food Budget (per week)',
+    suggestedSavings: '🐷 Suggested Weekly Savings', monthlySavingsGoal: '💰 Monthly Savings Goal (×4.3)',
+    perWeek: '/wk', confirmDeleteBill: 'Delete this fixed expense item?', confirmDeleteEntry: 'Delete this entry?',
+    fillAmtDate: 'Please fill in amount and date', billNamePlaceholder: 'Expense name', amtOnlyPlaceholder: 'Amount',
+    noDescription: '(no description)', noData: 'No data yet',
+    thisWeek: 'This week', weeksAgo: 'wk ago', weeksLater: 'wk later',
+    allExpense: 'Total spent', foodColon: 'Food', overspendShort: 'over by', remainShort: 'left',
+    freqWeekly: 'Weekly', freqFortnightly: 'Fortnightly', freqMonthly: 'Monthly',
+    freqBimonthly: 'Bi-monthly', freqQuarterly: 'Quarterly', freqYearly: 'Yearly',
+    langLabel: '中', themeLight: '☀️', themeDark: '🌙',
+    logoText1: 'Budget', logoText2: '', logoText3: 'Planner',
+  }
+};
+
+let currentLang = 'zh-Hant';
+let currentTheme = 'dark';
+
+function t(key) {
+  const dict = I18N[currentLang];
+  if (dict && Object.prototype.hasOwnProperty.call(dict, key)) return dict[key];
+  if (Object.prototype.hasOwnProperty.call(I18N['zh-Hant'], key)) return I18N['zh-Hant'][key];
+  return key;
+}
+
+// ── Safe localStorage wrapper ──
 let storageAvailable = true;
 function safeGet(key, fallback) {
   try { const v = localStorage.getItem(key); return v === null ? fallback : v; }
@@ -448,15 +576,19 @@ function safeSet(key, value) {
 
 // ── Data ──
 const CAT_COLORS = { food:'#6c8eff', transport:'#34d399', kids:'#a78bfa', health:'#fbbf24', misc:'#7b82a8' };
-const CAT_NAMES  = { food:'伙食', transport:'交通', kids:'小孩', health:'醫療', misc:'其他' };
+
+function catName(cat) {
+  const map = { food:'catFood', transport:'catTransport', kids:'catKids', health:'catHealth', misc:'catMisc' };
+  return t(map[cat] || 'catMisc');
+}
 
 const FREQ_OPTIONS = [
-  { value:'weekly',      label:'每週',     divisor:1 },
-  { value:'fortnightly', label:'每兩週',   divisor:2 },
-  { value:'monthly',     label:'每月',     divisor:4.33 },
-  { value:'bimonthly',   label:'每兩個月', divisor:8.67 },
-  { value:'quarterly',   label:'每季',     divisor:13 },
-  { value:'yearly',      label:'每年',     divisor:52 },
+  { value:'weekly',      i18n:'freqWeekly',      divisor:1 },
+  { value:'fortnightly', i18n:'freqFortnightly', divisor:2 },
+  { value:'monthly',     i18n:'freqMonthly',     divisor:4.33 },
+  { value:'bimonthly',   i18n:'freqBimonthly',   divisor:8.67 },
+  { value:'quarterly',   i18n:'freqQuarterly',   divisor:13 },
+  { value:'yearly',      i18n:'freqYearly',      divisor:52 },
 ];
 
 const EMOJI_LIST = ['🏠','💡','🌐','📱','🛡️','🧒','🍼','🚗','💊','🐾','📦','🎓','🏋️','☕','🎵','📺','🔧','✂️','🧹','💈'];
@@ -477,7 +609,6 @@ const DEFAULT_SETTINGS = { salary:1000, subsidy:500, foodBudget:350, bills:DEFAU
 let currentWeekOffset = 0;
 let entries  = [];
 let settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
-let billIdCounter = 0;
 
 try {
   entries = JSON.parse(safeGet('budget_entries', '[]'));
@@ -491,13 +622,18 @@ try {
   }
 } catch (e) { /* keep defaults */ }
 
-// Ensure every bill has a stable unique id
+let billIdCounter = 0;
 settings.bills.forEach((b) => { if (!b.id) { billIdCounter++; b.id = 'b_'+Date.now()+'_'+billIdCounter; } });
+
+// Restore language & theme preference
+const savedLang  = safeGet('budget_lang', null);
+const savedTheme = safeGet('budget_theme', null);
+if (savedLang === 'zh-Hant' || savedLang === 'en') currentLang = savedLang;
+if (savedTheme === 'dark' || savedTheme === 'light') currentTheme = savedTheme;
 
 // ── Calc helpers ──
 function weeklyIncome()  { return settings.salary + settings.subsidy / 2; }
 function weeklyBills()   { return settings.bills.reduce((s,b) => { const f = FREQ_OPTIONS.find(o=>o.value===b.freq)||FREQ_OPTIONS[2]; return s + b.amt/f.divisor; }, 0); }
-// fmt: formats a number as currency. Pass showSign=true to prefix negatives with "-" automatically.
 function fmt(n, showSign) {
   if (isNaN(n)) n = 0;
   if (showSign) return (n < 0 ? '-$' : '$') + Math.abs(n).toFixed(2);
@@ -512,9 +648,26 @@ function getWeekDates(offset) {
   const sun = new Date(mon); sun.setDate(mon.getDate()+6); sun.setHours(23,59,59,999);
   return { monday:mon, sunday:sun };
 }
-function fmtDate(d)      { return d.toLocaleDateString('zh-TW',{month:'short',day:'numeric'}); }
-function fmtDateInp(d)   { return d.toISOString().slice(0,10); }
-function isoDisplay(iso) { const d=new Date(iso+'T00:00:00'); return (d.getMonth()+1)+'/'+(d.getDate()); }
+
+// Australian date format: DD/MM/YYYY (also used for short displays as D/M)
+function fmtDateAU(d) {
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+function fmtDateShortAU(d) {
+  // Short form for week range labels: "16/06 – 22/06"
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  return `${dd}/${mm}`;
+}
+function fmtDateInp(d) { return d.toISOString().slice(0,10); } // yyyy-mm-dd required by <input type=date>
+function isoDisplayAU(iso) {
+  // Convert stored yyyy-mm-dd to DD/MM display
+  const d = new Date(iso+'T00:00:00');
+  return fmtDateShortAU(d);
+}
 
 function getWeekEntries(offset) {
   const {monday,sunday} = getWeekDates(offset);
@@ -531,14 +684,59 @@ function saveSettings() {
 }
 function saveEntries() { safeSet('budget_entries', JSON.stringify(entries)); }
 
+// ═══════════════════════════════════════
+//  I18N APPLY — updates all static text in DOM
+// ═══════════════════════════════════════
+function applyTranslations() {
+  document.documentElement.lang = currentLang === 'zh-Hant' ? 'zh-Hant' : 'en';
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.placeholder = t(key);
+  });
+
+  // Logo (composed from 3 parts so the highlighted middle word stays styled)
+  const logo = document.getElementById('logo-text');
+  const p1 = t('logoText1'), p2 = t('logoText2'), p3 = t('logoText3');
+  logo.innerHTML = p2 ? `${p1}<span>${p2}</span>${p3}` : `<span>${p1}</span> ${p3}`;
+
+  document.getElementById('lang-label').textContent = currentLang === 'zh-Hant' ? 'EN' : '中';
+  document.getElementById('date-hint').textContent = t('dateHint');
+  document.getElementById('theme-toggle').textContent = currentTheme === 'dark' ? t('themeLight') : t('themeDark');
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'zh-Hant' ? 'en' : 'zh-Hant';
+  safeSet('budget_lang', currentLang);
+  applyTranslations();
+  renderAll();
+  // Refresh bills tab content if visible (it's dynamically generated)
+  if (document.getElementById('tab-bills').style.display !== 'none') renderBillsTab();
+}
+
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  safeSet('budget_theme', currentTheme);
+  document.getElementById('theme-toggle').textContent = currentTheme === 'dark' ? t('themeLight') : t('themeDark');
+}
+
 // ── Render: week label ──
 function renderWeekLabel() {
   const {monday,sunday} = getWeekDates(currentWeekOffset);
-  const label = currentWeekOffset===0
-    ? `本週 ${fmtDate(monday)}–${fmtDate(sunday)}`
-    : currentWeekOffset<0
-      ? `${Math.abs(currentWeekOffset)}週前 ${fmtDate(monday)}–${fmtDate(sunday)}`
-      : `${currentWeekOffset}週後 ${fmtDate(monday)}–${fmtDate(sunday)}`;
+  const range = `${fmtDateShortAU(monday)}–${fmtDateShortAU(sunday)}`;
+  let label;
+  if (currentWeekOffset === 0) {
+    label = `${t('thisWeek')} ${range}`;
+  } else if (currentWeekOffset < 0) {
+    label = `${Math.abs(currentWeekOffset)} ${t('weeksAgo')} ${range}`;
+  } else {
+    label = `${currentWeekOffset} ${t('weeksLater')} ${range}`;
+  }
   document.getElementById('week-label').textContent = label;
 }
 
@@ -555,7 +753,7 @@ function renderSummary() {
   document.getElementById('sum-spent').className    = 's-value '+(over?'c-red':'c-yellow');
   document.getElementById('sum-remain').textContent = fmt(Math.abs(remain));
   document.getElementById('sum-remain').className   = 's-value '+(over?'c-red':'c-green');
-  document.getElementById('sum-remain-sub').textContent = over ? '⚠️ 已超支' : '還可以花';
+  document.getElementById('sum-remain-sub').textContent = over ? t('overspentLabel') : t('stillAvailable');
   document.getElementById('bar-pct').textContent = Math.round(pct)+'%';
   const fill = document.getElementById('bar-fill');
   fill.style.width = pct+'%';
@@ -567,14 +765,14 @@ function renderSummary() {
 function renderEntries() {
   const list = document.getElementById('entry-list');
   const we   = getWeekEntries(currentWeekOffset);
-  if (!we.length) { list.innerHTML='<div class="empty-state">本週還沒有記帳記錄 🌟</div>'; return; }
+  if (!we.length) { list.innerHTML = `<div class="empty-state">${t('noEntries')}</div>`; return; }
   const sorted = [...we].sort((a,b)=>b.date.localeCompare(a.date));
   list.innerHTML = sorted.map(e=>`
     <div class="entry-item">
-      <span class="e-date">${isoDisplay(e.date)}</span>
+      <span class="e-date">${isoDisplayAU(e.date)}</span>
       <span class="e-cat-dot" style="background:${CAT_COLORS[e.cat]||'#7b82a8'}"></span>
-      <span class="e-desc">${e.desc||'（無說明）'}</span>
-      <span class="e-cat-badge">${CAT_NAMES[e.cat]||e.cat}</span>
+      <span class="e-desc">${e.desc || t('noDescription')}</span>
+      <span class="e-cat-badge">${catName(e.cat)}</span>
       <span class="e-amt">-${fmt(e.amt)}</span>
       <button class="e-del" onclick="deleteEntry('${e.id}')">✕</button>
     </div>`).join('');
@@ -590,20 +788,20 @@ function renderMonth() {
     const food  = getFoodSpent(i);
     const total = getTotalSpent(i);
     const over  = food > budget;
-    const label = i===0?'本週':`${Math.abs(i)}週前`;
+    const label = i===0 ? t('thisWeek') : `${Math.abs(i)} ${t('weeksAgo')}`;
     html += `
       <div class="month-week">
         <div class="mw-header">
-          <span>${label}（${fmtDate(monday)}–${fmtDate(sunday)}）</span>
+          <span>${label} (${fmtDateShortAU(monday)}–${fmtDateShortAU(sunday)})</span>
           <span style="color:${over?'var(--red)':'var(--green)'}">${fmt(food)}</span>
         </div>
-        <div class="mw-sub">全部支出：${fmt(total)} ｜ 伙食：${over
-          ?`<span style="color:var(--red)">超支${fmt(food-budget)}</span>`
-          :`剩<span style="color:var(--green)">${fmt(budget-food)}</span>`}
+        <div class="mw-sub">${t('allExpense')}: ${fmt(total)} | ${t('foodColon')}: ${over
+          ? `<span style="color:var(--red)">${t('overspendShort')} ${fmt(food-budget)}</span>`
+          : `<span style="color:var(--green)">${t('remainShort')} ${fmt(budget-food)}</span>`}
         </div>
       </div>`;
   }
-  list.innerHTML = html || '<div class="empty-state">暫無資料</div>';
+  list.innerHTML = html || `<div class="empty-state">${t('noData')}</div>`;
 }
 
 // ── Render: bills tab ──
@@ -629,20 +827,20 @@ function renderBillsTab() {
   billsList.innerHTML = settings.bills.map(b => {
     const f = FREQ_OPTIONS.find(o=>o.value===b.freq)||FREQ_OPTIONS[2];
     const weekly = b.amt / f.divisor;
-    const freqOpts = FREQ_OPTIONS.map(o=>`<option value="${o.value}"${o.value===b.freq?' selected':''}>${o.label}</option>`).join('');
+    const freqOpts = FREQ_OPTIONS.map(o=>`<option value="${o.value}"${o.value===b.freq?' selected':''}>${t(o.i18n)}</option>`).join('');
     return `
       <div class="bill-card" id="bill-row-${b.id}">
         <div class="bill-card-top">
           <span class="emoji-cell" onclick="pickEmoji('${b.id}',this)">${b.emoji}</span>
-          <input class="bill-name-inp" type="text" value="${b.name}" placeholder="支出名稱"
+          <input class="bill-name-inp" type="text" value="${b.name}" placeholder="${t('billNamePlaceholder')}"
                  oninput="updateBill('${b.id}','name',this.value)" />
           <button class="bill-del-btn" onclick="deleteBill('${b.id}')">🗑</button>
         </div>
         <div class="bill-card-bottom">
-          <input type="number" step="0.01" value="${b.amt}" placeholder="金額" inputmode="decimal"
+          <input type="number" step="0.01" value="${b.amt}" placeholder="${t('amtOnlyPlaceholder')}" inputmode="decimal"
                  oninput="updateBill('${b.id}','amt',parseFloat(this.value)||0)" />
           <select onchange="updateBill('${b.id}','freq',this.value)">${freqOpts}</select>
-          <span class="weekly-cell" id="wc-${b.id}">${fmt(weekly)}/週</span>
+          <span class="weekly-cell" id="wc-${b.id}">${fmt(weekly)}${t('perWeek')}</span>
         </div>
       </div>`;
   }).join('');
@@ -654,7 +852,7 @@ function updateBill(id, field, value) {
   b[field] = value;
   const f = FREQ_OPTIONS.find(o=>o.value===b.freq)||FREQ_OPTIONS[2];
   const wc = document.getElementById('wc-'+id);
-  if (wc) wc.textContent = fmt(b.amt/f.divisor)+'/週';
+  if (wc) wc.textContent = fmt(b.amt/f.divisor)+t('perWeek');
   const income=weeklyIncome(), fixed=weeklyBills(), disp=income-fixed, savings=disp-settings.foodBudget;
   document.getElementById('bd-fixed').textContent      = fmt(-fixed, true);
   document.getElementById('bd-disposable').textContent = fmt(disp);
@@ -673,7 +871,7 @@ function addBill() {
 }
 
 function deleteBill(id) {
-  if (!confirm('確認刪除此固定支出項目？')) return;
+  if (!confirm(t('confirmDeleteBill'))) return;
   settings.bills = settings.bills.filter(b=>b.id!==id);
   safeSet('budget_settings', JSON.stringify(settings));
   renderBillsTab();
@@ -685,10 +883,8 @@ function pickEmoji(billId, spanEl) {
   const picker = document.createElement('div');
   picker.className = 'emoji-options';
   const rect = spanEl.getBoundingClientRect();
-  // position:fixed is relative to the viewport, so do NOT add window.scrollY/scrollX
   let top  = rect.bottom + 6;
   let left = rect.left;
-  // Keep picker on-screen (clamp to viewport)
   const pickerWidth = 260, pickerHeight = 160;
   if (left + pickerWidth > window.innerWidth)  left = window.innerWidth - pickerWidth - 8;
   if (left < 8) left = 8;
@@ -715,7 +911,7 @@ function addEntry() {
   const amt  = parseFloat(document.getElementById('inp-amt').value);
   const date = document.getElementById('inp-date').value;
   const cat  = document.getElementById('inp-cat').value;
-  if (!amt||amt<=0||!date) { alert('請填寫金額與日期'); return; }
+  if (!amt||amt<=0||!date) { alert(t('fillAmtDate')); return; }
   entries.push({ id:Date.now().toString(36), desc, amt, date, cat });
   saveEntries();
   document.getElementById('inp-desc').value = '';
@@ -724,7 +920,7 @@ function addEntry() {
 }
 
 function deleteEntry(id) {
-  if (!confirm('確認刪除此筆記錄？')) return;
+  if (!confirm(t('confirmDeleteEntry'))) return;
   entries = entries.filter(e=>e.id!==id);
   saveEntries(); renderAll();
 }
@@ -746,10 +942,12 @@ function renderAll() {
 
 // ── Init ──
 window.onload = () => {
+  // Apply saved theme immediately (already set on <html> via initial attribute, but re-affirm + icon)
+  document.documentElement.setAttribute('data-theme', currentTheme);
+
   const today = new Date();
   const dateInp = document.getElementById('inp-date');
-  dateInp.value = fmtDateInp(today);
-  // Reasonable bounds: 2 years back to 1 year ahead, to avoid wildly wrong week calculations
+  dateInp.value = fmtDateInp(today); // native input requires yyyy-mm-dd internally
   const minD = new Date(today); minD.setFullYear(minD.getFullYear() - 2);
   const maxD = new Date(today); maxD.setFullYear(maxD.getFullYear() + 1);
   dateInp.min = fmtDateInp(minD);
@@ -758,10 +956,13 @@ window.onload = () => {
   document.getElementById('inc-salary').value      = settings.salary;
   document.getElementById('inc-subsidy').value     = settings.subsidy;
   document.getElementById('food-budget-inp').value = settings.foodBudget;
-  renderBillsTab(); renderAll();
+
+  applyTranslations();
+  renderBillsTab();
+  renderAll();
 
   if (!storageAvailable) {
-    console.warn('localStorage 無法使用（可能為私密瀏覽模式），資料將不會被保存。');
+    console.warn('localStorage unavailable (private browsing?) — data will not persist.');
   }
 };
 </script>
