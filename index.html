@@ -135,6 +135,11 @@
   .c-yellow { color: var(--yellow); }
 
   /* ── Progress ── */
+  .carryover-note {
+    font-size: 12px; text-align: center; padding: 6px 10px;
+    margin-bottom: 12px; font-weight: 600;
+  }
+
   .budget-bar-wrap {
     background: var(--card); border: 1px solid var(--border);
     border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
@@ -436,6 +441,8 @@
     </div>
   </div>
 
+  <div class="carryover-note" id="carryover-note" style="display:none"></div>
+
   <!-- Progress -->
   <div class="budget-bar-wrap">
     <div class="bar-label"><span data-i18n="budgetUsage">週生活費預算使用率</span><span id="bar-pct">0%</span></div>
@@ -555,6 +562,7 @@ const I18N = {
     foodBudgetLabel: '每週生活費預算', perWeekAvailable: '每週可用',
     spentThisWeek: '本週已花', foodTotal: '全部支出合計',
     remainOver: '剩餘/超支', stillAvailable: '還可以花', overspentLabel: '⚠️ 已超支',
+    carryoverPositive: '💰 已加入上週結餘', carryoverNegative: '⚠️ 已扣除上週超支',
     budgetUsage: '週生活費預算使用率',
     categoryBreakdown: '本週各分類花費', weekGrandTotal: '本週總支出（全部類別）',
     weeklyBudgetLabel: '週預算',
@@ -589,6 +597,7 @@ const I18N = {
     foodBudgetLabel: 'Weekly Budget', perWeekAvailable: 'per week',
     spentThisWeek: 'Spent This Week', foodTotal: 'all spending',
     remainOver: 'Remain/Over', stillAvailable: 'still available', overspentLabel: '⚠️ Overspent',
+    carryoverPositive: '💰 Includes carryover from last week', carryoverNegative: '⚠️ Deducted overspend from last week',
     budgetUsage: 'Weekly Budget Usage',
     categoryBreakdown: "This Week's Spending by Category", weekGrandTotal: 'Total Spent This Week (All Categories)',
     weeklyBudgetLabel: 'Weekly Budget',
@@ -813,6 +822,44 @@ function getWeekEntries(offset) {
   return entries.filter(e => { const d=new Date(e.date+'T00:00:00'); return d>=monday&&d<=sunday; });
 }
 function getWeekSpent(offset)  { return getWeekEntries(offset).reduce((s,e)=>s+e.amt,0); } // ALL categories count toward the weekly budget
+
+// ── Carryover (cumulative) budget calculation ──
+// Logic: this week's available budget = base weekly budget + carryover from all PRIOR weeks
+// where carryover = (budget - spent) accumulated week by week, both directions (over OR under).
+// Weeks with NO entries at all are skipped (not counted as "spent $0, carry full budget forward"),
+// since a week you forgot to log shouldn't artificially inflate your carryover.
+function getEarliestEntryOffset() {
+  if (!entries.length) return 0;
+  const earliestDate = entries.reduce((min, e) => e.date < min ? e.date : min, entries[0].date);
+  const earliest = new Date(earliestDate + 'T00:00:00');
+  // Find the Monday of the week containing `earliest` (mirrors getWeekDates' Mon-Sun alignment)
+  const earliestMonday = new Date(earliest);
+  earliestMonday.setDate(earliest.getDate() - ((earliest.getDay()+6)%7));
+  earliestMonday.setHours(0,0,0,0);
+  const { monday: thisMonday } = getWeekDates(0);
+  // Now both are Mondays, so dividing by exactly 7 days gives an exact integer week count
+  const diffWeeks = Math.round((thisMonday - earliestMonday) / (7*24*60*60*1000));
+  return -diffWeeks; // negative offset (how many weeks back the earliest entry's week falls)
+}
+
+function getCarryoverBalance(uptoOffset) {
+  // Cumulative carryover = (number of counted weeks × base budget) - (total spent across those weeks).
+  // This is the closed-form of the recursive rule "each week's budget = base + previous week's carryover",
+  // which telescopes to: carryover_N = N*base - sum(spent_1..N). Weeks with NO logged entries at all are
+  // excluded entirely (not counted as a $0-spent week), since a week you forgot to log shouldn't inflate
+  // your carryover with a free "full budget saved."
+  const earliestOffset = getEarliestEntryOffset();
+  const base = settings.foodBudget;
+  let countedWeeks = 0;
+  let totalSpent = 0;
+  for (let w = earliestOffset; w < uptoOffset; w++) {
+    const weekEntries = getWeekEntries(w);
+    if (weekEntries.length === 0) continue; // skip weeks with no logged data at all
+    countedWeeks += 1;
+    totalSpent += weekEntries.reduce((s,e)=>s+e.amt, 0);
+  }
+  return (countedWeeks * base) - totalSpent;
+}
 function getTotalSpent(offset) { return getWeekEntries(offset).reduce((s,e)=>s+e.amt,0); } // kept as alias for monthly view compatibility
 
 function saveSettings() {
@@ -881,11 +928,13 @@ function renderWeekLabel() {
 
 // ── Render: summary ──
 function renderSummary() {
-  const spent  = getWeekSpent(currentWeekOffset); // ALL categories combined
-  const budget = settings.foodBudget; // this is now the overall weekly spending budget
-  const remain = budget - spent;
-  const over   = spent > budget;
-  const pct    = budget > 0 ? Math.min(spent/budget*100, 100) : 0;
+  const spent      = getWeekSpent(currentWeekOffset); // ALL categories combined
+  const baseBudget = settings.foodBudget;
+  const carryover  = getCarryoverBalance(currentWeekOffset); // can be + (saved up) or - (overspent before)
+  const budget     = baseBudget + carryover; // this week's actual available budget
+  const remain     = budget - spent;
+  const over       = spent > budget;
+  const pct        = budget > 0 ? Math.min(spent/budget*100, 100) : (spent > 0 ? 100 : 0);
 
   document.getElementById('sum-budget').textContent = fmt(budget);
   document.getElementById('sum-spent').textContent  = fmt(spent);
@@ -894,6 +943,21 @@ function renderSummary() {
   document.getElementById('sum-remain').className   = 's-value '+(over?'c-red':'c-green');
   document.getElementById('sum-remain-sub').textContent = over ? t('overspentLabel') : t('stillAvailable');
   document.getElementById('bar-pct').textContent = Math.round(pct)+'%';
+
+  // Show carryover note under the budget card so the user understands WHY the number isn't the flat base amount
+  const carryEl = document.getElementById('carryover-note');
+  if (carryEl) {
+    if (Math.abs(carryover) < 0.01) {
+      carryEl.textContent = '';
+      carryEl.style.display = 'none';
+    } else {
+      carryEl.style.display = 'block';
+      carryEl.textContent = carryover > 0
+        ? `${t('carryoverPositive')} +${fmt(carryover)}`
+        : `${t('carryoverNegative')} -${fmt(Math.abs(carryover))}`;
+      carryEl.className = 'carryover-note ' + (carryover > 0 ? 'c-green' : 'c-red');
+    }
+  }
   const fill = document.getElementById('bar-fill');
   fill.style.width = pct+'%';
   fill.className = 'bar-fill'+(over?' over':'');
@@ -951,20 +1015,25 @@ function renderEntries() {
 // ── Render: month ──
 function renderMonth() {
   const list   = document.getElementById('month-list');
-  const budget = settings.foodBudget;
+  const baseBudget = settings.foodBudget;
   let html = '';
   for (let i=0;i>=-4;i--) {
     const {monday,sunday} = getWeekDates(i);
-    const spent = getWeekSpent(i);
-    const over  = spent > budget;
+    const spent     = getWeekSpent(i);
+    const carryover = getCarryoverBalance(i);
+    const budget    = baseBudget + carryover;
+    const over      = spent > budget;
     const label = i===0 ? t('thisWeek') : `${Math.abs(i)} ${t('weeksAgo')}`;
+    const carryNote = Math.abs(carryover) >= 0.01
+      ? ` <span style="color:var(--muted)">(${t('weeklyBudgetLabel')} ${fmt(baseBudget)} ${carryover>0?'+':'-'} ${fmt(Math.abs(carryover))})</span>`
+      : '';
     html += `
       <div class="month-week">
         <div class="mw-header">
           <span>${label} (${fmtDateShortAU(monday)}–${fmtDateShortAU(sunday)})</span>
           <span style="color:${over?'var(--red)':'var(--green)'}">${fmt(spent)}</span>
         </div>
-        <div class="mw-sub">${t('weeklyBudgetLabel')}: ${fmt(budget)} | ${over
+        <div class="mw-sub">${t('weeklyBudgetLabel')}: ${fmt(budget)}${carryNote} | ${over
           ? `<span style="color:var(--red)">${t('overspendShort')} ${fmt(spent-budget)}</span>`
           : `<span style="color:var(--green)">${t('remainShort')} ${fmt(budget-spent)}</span>`}
         </div>
